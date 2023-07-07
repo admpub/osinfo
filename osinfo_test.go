@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/JustinTimperio/osinfo"
+	"github.com/admpub/osinfo"
 )
 
 func TestMain(m *testing.M) {
@@ -15,6 +15,6 @@ func TestMain(m *testing.M) {
 	fmt.Println(info.Name)
 	fmt.Println(info.Version)
 	fmt.Println("-------------")
-	fmt.Printf(info.String())
+	fmt.Println(info.String())
 	fmt.Println("-------------")
 }

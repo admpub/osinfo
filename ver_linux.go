@@ -7,17 +7,32 @@ import (
 	"strings"
 )
 
+var (
+	nameField  = regexp.MustCompile(`NAME=(.*?)\n|\nNAME=(.*?)\n`)
+	pnameField = regexp.MustCompile(`PRETTY_NAME=(.*?)\n|\nPRETTY_NAME=(.*?)\n`)
+	verField   = regexp.MustCompile(`VERSION_ID=(.*?)\n|\nVERSION_ID=(.*?)\n`)
+)
+
+var (
+	suse    = regexp.MustCompile(`SLES|openSUSE`)
+	debian  = regexp.MustCompile(`Debian|Ubuntu|Kali|Parrot|Mint`)
+	rhl     = regexp.MustCompile(`Red Hat|CentOS|Fedora|Oracle`)
+	arch    = regexp.MustCompile(`Arch|Manjaro`)
+	alpine  = regexp.MustCompile(`Alpine`)
+	openwrt = regexp.MustCompile(`OpenWrt`)
+)
+
 // GetVersion Linux returns version info
 // fetching os info for linux distros is more complicated process than it should be
 // version information is collected via `uname` and `/etc/os-release`
 // Returns:
-//		- r.Runtime
-//		- r.Arch
-//		- r.Name
-//		- r.Version
-//		- r.Linux.Kernel
-//		- r.Linux.Distro
-//		- r.Linux.PkgMng
+//   - r.Runtime
+//   - r.Arch
+//   - r.Name
+//   - r.Version
+//   - r.Linux.Kernel
+//   - r.Linux.Distro
+//   - r.Linux.PkgMng
 func GetVersion() Release {
 	info := Release{
 		Runtime: runtime.GOOS,
@@ -41,12 +56,6 @@ func GetVersion() Release {
 		return info
 	}
 
-	var (
-		nameField  = regexp.MustCompile(`NAME=(.*?)\n|\nNAME=(.*?)\n`)
-		pnameField = regexp.MustCompile(`PRETTY_NAME=(.*?)\n|\nPRETTY_NAME=(.*?)\n`)
-		verField   = regexp.MustCompile(`VERSION_ID=(.*?)\n|\nVERSION_ID=(.*?)\n`)
-	)
-
 	f := readFile("/etc/os-release")
 	var (
 		namef  = cleanString(nameField.FindString(f))
@@ -61,14 +70,6 @@ func GetVersion() Release {
 	if verf := strings.Split(verf, "="); len(verf) >= 2 {
 		info.Version = verf[1]
 	}
-
-	var (
-		suse   = regexp.MustCompile(`SLES|openSUSE`)
-		debian = regexp.MustCompile(`Debian|Ubuntu|Kali|Parrot|Mint`)
-		rhl    = regexp.MustCompile(`Red Hat|CentOS|Fedora|Oracle`)
-		arch   = regexp.MustCompile(`Arch|Manjaro`)
-		alpine = regexp.MustCompile(`Alpine`)
-	)
 
 	var name string
 	if namef := strings.Split(namef, "="); len(namef) >= 2 {
@@ -98,6 +99,10 @@ func GetVersion() Release {
 	case alpine.MatchString(name):
 		info.Linux.Distro = "alpine"
 		info.Linux.PkgManager = "apk"
+
+	case openwrt.MatchString(name):
+		info.Linux.Distro = "openwrt"
+		info.Linux.PkgManager = "opkg"
 	}
 
 	return info
